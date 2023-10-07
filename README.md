@@ -20,13 +20,17 @@ These instructions will get you running the codes of MixText.
 ### Code Structure
 ```
 |__ data/
-        |__ yahoo_answers_csv/ --> Datasets for Yahoo Answers
+        |__ AG_News/ --> Datasets for AG News
+            |__ Preprocess.ipynb --> Jupyter Notebook for process/clean the dataset
             |__ back_translate.ipynb --> Jupyter Notebook for back translating the dataset
-            |__ classes.txt --> Classes for Yahoo Answers dataset
+            |__ classes.txt --> Classes for AG_News dataset
             |__ train.csv --> Original training dataset
             |__ test.csv --> Original testing dataset
-            |__ de_1.pkl --> Back translated training dataset with German as middle language
-            |__ ru_1.pkl --> Back translated training dataset with Russian as middle language
+            |__ train_clean.csv --> Cleaned training dataset
+            |__ test_clean.csv --> Cleaned testing dataset
+            |__ zh.pkl --> Training dataset translated to Chinese
+            |__ zh_back.pkl --> Back translated training dataset with Chinese as middle language
+        |__ yahoo_answers/ --> Datasets for yahoo_answers
 
 |__code/
         |__ transformers/ --> Codes copied from huggingface/transformers
