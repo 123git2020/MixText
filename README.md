@@ -30,7 +30,9 @@ These instructions will get you running the codes of MixText.
             |__ test_clean.csv --> Cleaned testing dataset
             |__ zh.pkl --> Training dataset translated to Chinese
             |__ zh_back.pkl --> Back translated training dataset with Chinese as middle language
+
         |__ yahoo_answers/ --> Datasets for yahoo_answers
+
 
 |__code/
         |__ transformers/ --> Codes copied from huggingface/transformers
@@ -46,6 +48,7 @@ Please download the dataset and put them in the data folder. You can find Yahoo 
 
 ### Pre-processing the data
 
+_It seems that there is no yahoo dataset identical to the one used by the authors._
 
 Note that for AG News and DB Pedia, we only utilize the content (without titles) to do the classifications, and for IMDB we do not perform any pre-processing.
 
