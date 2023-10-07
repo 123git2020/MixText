@@ -33,7 +33,7 @@ parser.add_argument('--lrlast', '--learning-rate-model', default=0.001, type=flo
 parser.add_argument('--gpu', default='0,1,2,3', type=str,
                     help='id(s) for CUDA_VISIBLE_DEVICES')
 
-parser.add_argument('--n-labeled', type=int, default=20,
+parser.add_argument('--n-labeled', type=int, default=50,
                     help='number of labeled data')
 
 parser.add_argument('--un-labeled', default=5000, type=int,
@@ -58,11 +58,11 @@ parser.add_argument('--train_aug', default=False, type=bool, metavar='N',
 parser.add_argument('--model', type=str, default='bert-base-uncased',
                     help='pretrained model')
 
-parser.add_argument('--data-path', type=str, default='yahoo_answers_csv/',
+parser.add_argument('--data-path', type=str, default='data/AG_News/',
                     help='path to data folders')
 
 parser.add_argument('--mix-layers-set', nargs='+',
-                    default=[0, 1, 2, 3], type=int, help='define mix layer set')
+                    default=[7, 9, 12], type=int, help='define mix layer set')
 
 parser.add_argument('--alpha', default=0.75, type=float,
                     help='alpha for beta distribution')
@@ -103,11 +103,12 @@ def main():
         dataset=train_labeled_set, batch_size=args.batch_size, shuffle=True)
     unlabeled_trainloader = Data.DataLoader(
         dataset=train_unlabeled_set, batch_size=args.batch_size_u, shuffle=True)
+    
     val_loader = Data.DataLoader(
         dataset=val_set, batch_size=512, shuffle=False)
     test_loader = Data.DataLoader(
         dataset=test_set, batch_size=512, shuffle=False)
-
+    
     # Define the model, set the optimizer
     model = MixText(n_labels, args.mix_option).cuda()
     model = nn.DataParallel(model)
@@ -188,34 +189,33 @@ def train(labeled_trainloader, unlabeled_trainloader, model, optimizer, schedule
 
         if not train_aug:
             try:
-                inputs_x, targets_x, inputs_x_length = labeled_train_iter.next()
+                inputs_x, targets_x, inputs_x_length = next(labeled_train_iter)
             except:
-                labeled_train_iter = iter(labeled_trainloader)
-                inputs_x, targets_x, inputs_x_length = labeled_train_iter.next()
+                labeled_train_iter = iter(labeled_trainloader)          # label_loader会被先遍历完, 此时新建
+                inputs_x, targets_x, inputs_x_length = next(labeled_train_iter)  #一个iter再从头遍历
         else:
             try:
                 (inputs_x, inputs_x_aug), (targets_x, _), (inputs_x_length,
-                                                           inputs_x_length_aug) = labeled_train_iter.next()
+                                                           inputs_x_length_aug) = next(labeled_train_iter)
             except:
                 labeled_train_iter = iter(labeled_trainloader)
                 (inputs_x, inputs_x_aug), (targets_x, _), (inputs_x_length,
-                                                           inputs_x_length_aug) = labeled_train_iter.next()
+                                                           inputs_x_length_aug) = next(labeled_train_iter)
         try:
-            (inputs_u, inputs_u2,  inputs_ori), (length_u,
-                                                 length_u2,  length_ori) = unlabeled_train_iter.next()
+            (inputs_u, inputs_ori), (length_u,                          # 同上方法遍历
+                                                length_ori) = next(unlabeled_train_iter)
         except:
             unlabeled_train_iter = iter(unlabeled_trainloader)
-            (inputs_u, inputs_u2, inputs_ori), (length_u,
-                                                length_u2, length_ori) = unlabeled_train_iter.next()
+            (inputs_u, inputs_ori), (length_u,
+                                                length_ori) = next(unlabeled_train_iter)
 
         batch_size = inputs_x.size(0)
         batch_size_2 = inputs_ori.size(0)
-        targets_x = torch.zeros(batch_size, n_labels).scatter_(
-            1, targets_x.view(-1, 1), 1)
+        targets_x = torch.zeros(batch_size, n_labels).scatter_(   # 在第一维度上以target_x原值为下标填充1，
+            1, targets_x.view(-1, 1), 1)                          # 把target变成one-hot向量 
 
         inputs_x, targets_x = inputs_x.cuda(), targets_x.cuda(non_blocking=True)
         inputs_u = inputs_u.cuda()
-        inputs_u2 = inputs_u2.cuda()
         inputs_ori = inputs_ori.cuda()
 
         mask = []
@@ -223,19 +223,15 @@ def train(labeled_trainloader, unlabeled_trainloader, model, optimizer, schedule
         with torch.no_grad():
             # Predict labels for unlabeled data.
             outputs_u = model(inputs_u)
-            outputs_u2 = model(inputs_u2)
             outputs_ori = model(inputs_ori)
 
             # Based on translation qualities, choose different weights here.
-            # For AG News: German: 1, Russian: 0, ori: 1
-            # For DBPedia: German: 1, Russian: 1, ori: 1
-            # For IMDB: German: 0, Russian: 0, ori: 1
-            # For Yahoo Answers: German: 1, Russian: 0, ori: 1 / German: 0, Russian: 0, ori: 1
-            p = (0 * torch.softmax(outputs_u, dim=1) + 0 * torch.softmax(outputs_u2,
-                                                                         dim=1) + 1 * torch.softmax(outputs_ori, dim=1)) / (1)
+            # For AG News: Chinese: 0.8, ori: 1
+
+            p = (0.8 * torch.softmax(outputs_u, dim=1) + 1 * torch.softmax(outputs_ori, dim=1)) / (1.8)
             # Do a sharpen here.
             pt = p**(1/args.T)
-            targets_u = pt / pt.sum(dim=1, keepdim=True)
+            targets_u = pt / pt.sum(dim=1, keepdim=True)   
             targets_u = targets_u.detach()
 
         mixed = 1
@@ -246,7 +242,7 @@ def train(labeled_trainloader, unlabeled_trainloader, model, optimizer, schedule
             mix_ = 1
 
         if mix_ == 1:
-            l = np.random.beta(args.alpha, args.alpha)
+            l = np.random.beta(args.alpha, args.alpha)   # l is λ, the fraction of mix
             if args.separate_mix:
                 l = l
             else:
@@ -258,20 +254,20 @@ def train(labeled_trainloader, unlabeled_trainloader, model, optimizer, schedule
         mix_layer = mix_layer - 1
 
         if not train_aug:
-            all_inputs = torch.cat(
-                [inputs_x, inputs_u, inputs_u2, inputs_ori, inputs_ori], dim=0)
-
+            all_inputs = torch.cat(                 #将全部有标签的和无标签的输入连接起来
+                [inputs_x, inputs_u, inputs_ori, inputs_ori], dim=0) 
+                                                        
             all_lengths = torch.cat(
-                [inputs_x_length, length_u, length_u2, length_ori, length_ori], dim=0)
+                [inputs_x_length, length_u, length_ori, length_ori], dim=0)
 
-            all_targets = torch.cat(
-                [targets_x, targets_u, targets_u, targets_u, targets_u], dim=0)
+            all_targets = torch.cat(                #将全部有标签的和无标签的target连接起来
+                [targets_x, targets_u, targets_u, targets_u], dim=0)
 
         else:
-            all_inputs = torch.cat(
-                [inputs_x, inputs_x_aug, inputs_u, inputs_u2, inputs_ori], dim=0)
+            all_inputs = torch.cat(                
+                [inputs_x, inputs_x_aug, inputs_u, inputs_ori], dim=0)
             all_lengths = torch.cat(
-                [inputs_x_length, inputs_x_length, length_u, length_u2, length_ori], dim=0)
+                [inputs_x_length, inputs_x_length, length_u, length_ori], dim=0)
             all_targets = torch.cat(
                 [targets_x, targets_x, targets_u, targets_u, targets_u], dim=0)
 
@@ -280,19 +276,16 @@ def train(labeled_trainloader, unlabeled_trainloader, model, optimizer, schedule
             idx2 = torch.randperm(all_inputs.size(0) - batch_size) + batch_size
             idx = torch.cat([idx1, idx2], dim=0)
 
-        else:
-            idx1 = torch.randperm(all_inputs.size(0) - batch_size_2)
-            idx2 = torch.arange(batch_size_2) + \
-                all_inputs.size(0) - batch_size_2
-            idx = torch.cat([idx1, idx2], dim=0)
+        else:           
+            idx = torch.randperm(len(all_inputs))   # 把有标签和无标签的下标混合打散
 
-        input_a, input_b = all_inputs, all_inputs[idx]
+        input_a, input_b = all_inputs, all_inputs[idx]     #原数据a和打散后的数据b
         target_a, target_b = all_targets, all_targets[idx]
         length_a, length_b = all_lengths, all_lengths[idx]
 
         if args.mix_method == 0:
             # Mix sentences' hidden representations
-            logits = model(input_a, input_b, l, mix_layer)
+            logits = model(input_a, input_b, l, mix_layer)          # gpu内存满了
             mixed_target = l * target_a + (1 - l) * target_b
 
         elif args.mix_method == 1:
