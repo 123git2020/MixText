@@ -61,14 +61,14 @@ These section contains instructions for training models on Yahoo Answers using 1
 #### Training BERT baseline model
 Please run `./code/normal_train.py` to train the BERT baseline model (only use labeled training data):
 ```
-python ./code/normal_train.py --gpu 0,1 --n-labeled 10 --data-path ./data/yahoo_answers_csv/ \
+python ./code/normal_train.py --gpu 0,1 --n-labeled 10 --data-path ./data/AG_News/ \
 --batch-size 8 --epochs 20 
 ```
 
 #### Training TMix model
 Please run `./code/train.py` to train the TMix model (only use labeled training data):
 ```
-python ./code/train.py --gpu 0,1 --n-labeled 10 --data-path ./data/yahoo_answers_csv/ \
+python ./code/train.py --gpu 0,1 --n-labeled 10 --data-path ./data/AG_News/ \
 --batch-size 8 --batch-size-u 1 --epochs 50 --val-iteration 20 \
 --lambda-u 0 --T 0.5 --alpha 16 --mix-layers-set 7 9 12 --separate-mix True 
 ```
@@ -78,7 +78,7 @@ python ./code/train.py --gpu 0,1 --n-labeled 10 --data-path ./data/yahoo_answers
 Please run `./code/train.py` to train the MixText model (use both labeled and unlabeled training data):
 ```
 python ./code/train.py --gpu 0,1,2,3 --n-labeled 10 \
---data-path ./data/yahoo_answers_csv/ --batch-size 4 --batch-size-u 8 --epochs 20 --val-iteration 1000 \
+--data-path ./data/AG_News/ --batch-size 4 --batch-size-u 8 --epochs 20 --val-iteration 1000 \
 --lambda-u 1 --T 0.5 --alpha 16 --mix-layers-set 7 9 12 \
 --lrmain 0.000005 --lrlast 0.0005
 ```
