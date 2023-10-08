@@ -54,7 +54,7 @@ Note that for AG News and DB Pedia, we only utilize the content (without titles)
 
 We utilize [pygtrans](https://pypi.org/project/pygtrans/) which is a translation library using google translate to perform back translation on the training dataset. Please refer to `./data/AG_News/back_translate.ipynb` for details.
 
-Here, we have put two examples of back translated data, `de_1.pkl and ru_1.pkl`, in `./data/yahoo_answers_csv/` as well. You can directly use them for Yahoo Answers or generate your own back translated data followed the `./data/yahoo_answers_csv/back_translate.ipynb`.
+Here, we have put two examples of back translated data, `zh_back.pkl`, in `./data/AG_News/` as well. You can directly use them for Yahoo Answers or generate your own back translated data followed the `./data/AG_News/back_translate.ipynb`.
 
 
 
