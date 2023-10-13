@@ -59,7 +59,8 @@ Here, we have put two examples of back translated data, `zh_back.pkl`, in `./dat
 
 
 ### Training models
-These section contains instructions for training models on Yahoo Answers using 10 labeled data per class for training.
+These section contains instructions for training models on AG News using 4 labeled data per class for training. _A Titan V GPU is needed to train_
+
 
 #### Training BERT baseline model
 Please run `./code/normal_train.py` to train the BERT baseline model (only use labeled training data):
@@ -84,9 +85,3 @@ python ./code/train.py --gpu 0,1,2,3 --n-labeled 10 \
 --data-path ./data/AG_News/ --batch-size 4 --batch-size-u 8 --epochs 20 --val-iteration 1000 \
 --lambda-u 1 --T 0.5 --alpha 16 --mix-layers-set 7 9 12 \
 --lrmain 0.000005 --lrlast 0.0005
-```
-
-
-
-
-
