@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from pytorch_transformers import *
+from transformers import BertModel
 
 
 class ClassificationBert(nn.Module):
@@ -14,9 +14,9 @@ class ClassificationBert(nn.Module):
 
     def forward(self, x, length=256):
         # Encode input text
-        all_hidden, pooler = self.bert(x)
+        model_output = self.bert(x)
 
-        pooled_output = torch.mean(all_hidden, 1)
+        pooled_output = torch.mean(model_output.last_hidden_state, 1)
         # Use linear layer to do the predictions
         predict = self.linear(pooled_output)
 

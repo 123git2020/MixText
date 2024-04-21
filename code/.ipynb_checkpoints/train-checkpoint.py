@@ -24,7 +24,7 @@ parser = argparse.ArgumentParser(description='PyTorch MixText')
 
 parser.add_argument('--epochs', default=20, type=int, metavar='N',
                     help='number of total epochs to run')
-parser.add_argument('--batch-size', default=4, type=int, metavar='N',
+parser.add_argument('--batch-size', default=24, type=int, metavar='N',
                     help='train batchsize')
 parser.add_argument('--batch-size-u', default=8, type=int, metavar='N',
                     help='train batchsize')
@@ -37,13 +37,13 @@ parser.add_argument('--lrlast', '--learning-rate-model', default=0.001, type=flo
 parser.add_argument('--gpu', default='0,1,2,3', type=str,
                     help='id(s) for CUDA_VISIBLE_DEVICES')
 
-parser.add_argument('--n-labeled', type=int, default=10,
+parser.add_argument('--n-labeled', type=int, default=20,
                     help='number of labeled data')
 
-parser.add_argument('--un-labeled', default=1000, type=int,
+parser.add_argument('--un-labeled', default=4000, type=int,
                     help='number of unlabeled data')
 0
-parser.add_argument('--val-iteration', type=int, default=500,
+parser.add_argument('--val-iteration', type=int, default=2000,
                     help='number of labeled data')
 
 
@@ -104,14 +104,14 @@ def main():
     train_labeled_set, train_unlabeled_set, val_set, test_set, n_labels = get_data(
         args.data_path, args.n_labeled, args.un_labeled, max_seq_len=210, model=args.model, train_aug=args.train_aug)
     labeled_trainloader = Data.DataLoader(
-        dataset=train_labeled_set, batch_size=args.batch_size, shuffle=True, num_workers=0)
+        dataset=train_labeled_set, batch_size=args.batch_size, shuffle=True, num_workers=8)
     unlabeled_trainloader = Data.DataLoader(
-        dataset=train_unlabeled_set, batch_size=args.batch_size_u, shuffle=True, num_workers=0)
+        dataset=train_unlabeled_set, batch_size=args.batch_size_u, shuffle=True, num_workers=8)
     
     val_loader = Data.DataLoader(
-        dataset=val_set, batch_size=512, shuffle=False, num_workers=0)
+        dataset=val_set, batch_size=512, shuffle=False, num_workers=8)
     test_loader = Data.DataLoader(
-        dataset=test_set, batch_size=512, shuffle=False, num_workers=0)
+        dataset=test_set, batch_size=512, shuffle=False, num_workers=8)
     
     # Define the model, set the optimizer
     model = MixText(n_labels, args.mix_option).to(device)
@@ -157,8 +157,9 @@ def main():
             print("epoch {}, test acc {},test loss {}".format(
                 epoch, test_acc, test_loss))
 
-        writer.add_scalar("Test loss",test_loss,epoch+1)
-        writer.add_scalar("Test acc",test_acc,epoch+1)
+        global total_steps
+        writer.add_scalar("Test Loss",test_loss,total_steps)
+        writer.add_scalar("Test acc",test_acc,total_steps)
 
         print('Epoch: ', epoch)
 
@@ -289,7 +290,7 @@ def train(labeled_trainloader, unlabeled_trainloader, model, optimizer, schedule
         length_a, length_b = all_lengths, all_lengths[idx]
 
         if args.mix_method == 0:
-            # Mix sentences' hidden representations and targets
+            # Mix sentences' hidden representations
             logits = model(input_a, input_b, l, mix_layer)         
             mixed_target = l * target_a + (1 - l) * target_b
 
@@ -356,7 +357,7 @@ def train(labeled_trainloader, unlabeled_trainloader, model, optimizer, schedule
         scheduler.step()
 
         if total_steps % 100 == 0:
-            writer.add_scalar("Train loss",loss.item(),total_steps)
+            writer.add_scalar("loss",loss.item(),total_steps)
             writer.add_scalars("loss components",{"CE":Lx.item(),"KL":Lu.item()},total_steps)
 
             print("epoch {}, step {}, loss {}, Lx {}, Lu {}, Lu2 {}".format(
@@ -448,5 +449,5 @@ class SemiLoss(object):
 
 
 if __name__ == '__main__':
-    #lian()
+    lian()
     main()

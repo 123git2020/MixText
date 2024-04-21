@@ -1,17 +1,16 @@
 import torch
 import torch.nn as nn
-from pytorch_transformers import *
-from transformers.modeling_bert import BertEmbeddings, BertPooler, BertLayer
+from transformers.models.bert.modeling_bert import BertEmbeddings, BertPooler, BertLayer,BertModel,BertPreTrainedModel
+import gc
 
-
-class BertModel4Mix(BertPreTrainedModel):
+class BertModel4Mix(BertPreTrainedModel):    # An abstract class to handle weights initialization
     def __init__(self, config):
         super(BertModel4Mix, self).__init__(config)
         self.embeddings = BertEmbeddings(config)
         self.encoder = BertEncoder4Mix(config)
         self.pooler = BertPooler(config)
 
-        self.init_weights()
+        self.init_weights()         # weights init
 
     def _resize_token_embeddings(self, new_num_tokens):
         old_embeddings = self.embeddings.word_embeddings
@@ -142,7 +141,8 @@ class BertEncoder4Mix(nn.Module):
 
                 if self.output_attentions:
                     all_attentions = all_attentions + (layer_outputs[1],)
-
+            
+            
         # Add last layer
         if self.output_hidden_states:
             all_hidden_states = all_hidden_states + (hidden_states,)

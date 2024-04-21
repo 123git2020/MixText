@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import torch
 from torch.utils.data import Dataset
-from pytorch_transformers import *
+from transformers import BertTokenizer
 import torch.utils.data as Data
 import pickle
 
@@ -117,8 +117,8 @@ def train_val_split(labels, n_labeled_per_class, unlabeled_per_class, n_labels, 
             # Yahoo/AG News
             train_pool = np.concatenate((idxs[:500], idxs[5500:-2000])) # 取出有标签训练数据池
             train_labeled_idxs.extend(train_pool[:n_labeled_per_class]) # 在池中选取少量有标签数据
-            train_unlabeled_idxs.extend(        # 无标签训练数据            
-                idxs[500: 500 + 5000])
+            train_unlabeled_idxs.extend(        # 有标签池之外都是无标签训练数据            
+                idxs[500: 500 + unlabeled_per_class])
             val_idxs.extend(idxs[-2000:])       # 验证集有标签
     np.random.shuffle(train_labeled_idxs)
     np.random.shuffle(train_unlabeled_idxs)

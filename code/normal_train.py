@@ -8,20 +8,21 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.data as Data
-from pytorch_transformers import *
+from transformers import AdamW
 from torch.autograd import Variable
 from torch.utils.data import Dataset
 
 from read_data import *
 from normal_bert import ClassificationBert
 
+from torch.utils.tensorboard import SummaryWriter
+writer=SummaryWriter()
+
 parser = argparse.ArgumentParser(description='PyTorch Base Models')
 
-parser.add_argument('--epochs', default=50, type=int, metavar='N',
+parser.add_argument('--epochs', default=20, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--batch-size', default=4, type=int, metavar='N',
-                    help='train batchsize')
-parser.add_argument('--batch-size-u', default=24, type=int, metavar='N',
                     help='train batchsize')
 
 parser.add_argument('--lrmain', '--learning-rate-bert', default=0.00001, type=float,
@@ -32,11 +33,8 @@ parser.add_argument('--lrlast', '--learning-rate-model', default=0.001, type=flo
 parser.add_argument('--gpu', default='0,1,2,3', type=str,
                     help='id(s) for CUDA_VISIBLE_DEVICES')
 
-parser.add_argument('--n-labeled', type=int, default=20,
+parser.add_argument('--n-labeled', type=int, default=10,
                     help='Number of labeled data')
-parser.add_argument('--val-iteration', type=int, default=200,
-                    help='Number of labeled data')
-
 
 parser.add_argument('--mix-option', default=False, type=bool, metavar='N',
                     help='mix option')
@@ -47,7 +45,7 @@ parser.add_argument('--train_aug', default=False, type=bool, metavar='N',
 parser.add_argument('--model', type=str, default='bert-base-uncased',
                     help='pretrained model')
 
-parser.add_argument('--data-path', type=str, default='yahoo_answers_csv/',
+parser.add_argument('--data-path', type=str, default='data/AG_News/',
                     help='path to data folders')
 
 
@@ -104,8 +102,12 @@ def main():
             print("epoch {}, test acc {},test loss {}".format(
                 epoch, test_acc, test_loss))
 
+        writer.add_scalar("Test loss",test_loss,epoch+1)
+        writer.add_scalar("Test acc",test_acc,epoch+1)
+
     print('Best val_acc:')
     print(best_acc)
+
 
     print('Test acc:')
     print(test_accs)
@@ -146,8 +148,14 @@ def train(labeled_trainloader, model, optimizer, criterion, epoch):
         loss = criterion(outputs, targets)
 
         optimizer.zero_grad()
-        print('epoch {}, step {}, loss {}'.format(
-            epoch, batch_idx, loss.item()))
+
+        if (batch_idx+1)%10==0:
+            steps=len(labeled_trainloader)*epoch+(batch_idx+1)
+
+            print('epoch {}, step {}, loss {}'.format(epoch, batch_idx+1, loss.item()))
+
+            writer.add_scalar("Train loss",loss.item(),steps)
+
         loss.backward()
         optimizer.step()
 
