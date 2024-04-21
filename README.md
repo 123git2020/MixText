@@ -10,11 +10,8 @@ If you would like to refer to it, please cite the paper mentioned above.
 These instructions will get you running the codes of MixText.
 
 ### Requirements
-* Python 3.6 or higher
-* Pytorch >= 1.3.0
-* Pytorch_transformers (also known as transformers)
+* transformers
 * Pandas, Numpy, Pickle
-* Fairseq
 
 
 ### Code Structure
@@ -58,7 +55,7 @@ Here, we have put two examples of back translated data, `zh_back.pkl`, in `./dat
 
 
 ### Training models
-These section contains instructions for training models on AG News using 4 labeled data per class for training. _A Titan V GPU is needed to train_
+These section contains instructions for training models on AG News using 4 labeled data per class for training.
 
 
 #### Training BERT baseline model
@@ -84,3 +81,7 @@ python ./code/train.py --gpu 0,1,2,3 --n-labeled 10 \
 --data-path ./data/AG_News/ --batch-size 4 --batch-size-u 8 --epochs 20 --val-iteration 1000 \
 --lambda-u 1 --T 0.5 --alpha 16 --mix-layers-set 7 9 12 \
 --lrmain 0.000005 --lrlast 0.0005
+```
+
+### Results
+The [runs](https://github.com/123git2020/MixText/tree/master/runs) folder gives tensorboard logs of two training runs with different labeld data.
