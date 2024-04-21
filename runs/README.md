@@ -1,9 +1,9 @@
 # Comparison bwtween Vanilla BERT and MixText
 
 <p align="center">
-    <img width="480" height="420" src="acc.png" alt="accuracy" />  
+    <img width="800" height="400" src="acc.png" alt="accuracy" />  
 </p>
 
 <p align="center">
-    <img width="480" height="420" src="loss.png" alt="loss components" />  
+    <img width="800" height="400" src="loss.png" alt="loss components" />  
 </p>
