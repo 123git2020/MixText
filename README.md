@@ -1,7 +1,7 @@
 # MixText
 This repo contains codes for the following paper: 
 
-*Jiaao Chen, Zichao Yang, Diyi Yang*: MixText: Linguistically-Informed Interpolation of Hidden Space for Semi-Supervised Text Classification. In Proceedings of the 58th Annual Meeting of the Association of Computational Linguistics (ACL'2020)
+*Jiaao Chen, Zichao Yang, Diyi Yang*: [MixText: Linguistically-Informed Interpolation of Hidden Space for Semi-Supervised Text Classification](https://aclanthology.org/2020.acl-main.194/). In Proceedings of the 58th Annual Meeting of the Association of Computational Linguistics (ACL'2020)
 
 If you would like to refer to it, please cite the paper mentioned above. 
 
